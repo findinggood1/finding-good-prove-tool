@@ -9,7 +9,6 @@ import {
   Button,
   Input,
   Textarea,
-  TimeframeSelector,
   IntensitySelector,
   QuestionCard,
   LoadingSpinner,
@@ -27,7 +26,7 @@ import {
   // interpretValidation,  // TODO: Phase 4 - Uncomment for real Edge Function call
   hasPulseForCurrentWeek
 } from '../lib/api';
-import type { FIRESElement, Timeframe, Intensity, /* QuestionResponse, */ Prediction } from '../types/validation';
+import type { FIRESElement, Intensity, /* QuestionResponse, */ Prediction } from '../types/validation';
 
 // Flow steps - now includes 'goal' step
 type Step = 
@@ -45,7 +44,7 @@ type Step =
 export default function SelfMode() {
   const navigate = useNavigate();
   const { email, isAuthenticated, login, isLoading: authLoading } = useAuth();
-  const { state, setMode, setGoalChallenge, setTimeframe, setIntensity, setSelectedQuestions, setInterpretation, resetSession } = useApp();
+  const { state, setMode, setGoalChallenge, setIntensity, setSelectedQuestions, setInterpretation, resetSession } = useApp();
 
   // Local state
   const [step, setStep] = useState<Step>('email');
@@ -118,8 +117,8 @@ export default function SelfMode() {
 
   // Handle context setup complete
   const handleContextComplete = () => {
-    if (!state.timeframe || !state.intensity) {
-      setError('Please select a timeframe and intensity');
+    if (!state.intensity) {
+      setError('Please select an intensity level');
       return;
     }
 
@@ -370,16 +369,16 @@ export default function SelfMode() {
         return (
           <Card variant="elevated" padding="lg" className="animate-fade-in">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              What's the goal, challenge, or thing that mattered?
+              Describe what you accomplished and when it happened
             </h2>
             <p className="text-gray-600 mb-6">
-              Describe what you accomplished or handled that you want to understand better.
+              Include the timeframe naturally in your description (e.g., "this week", "yesterday", "over the past month").
             </p>
 
             <Textarea
               value={goalInput}
               onChange={(e) => setGoalInput(e.target.value)}
-              placeholder="e.g., I led that difficult client meeting, finished the project ahead of schedule, handled the team conflict constructively..."
+              placeholder="e.g., I closed a major deal this week, I led that difficult client meeting yesterday, I finished the project ahead of schedule this month..."
               rows={4}
               maxLength={500}
               showCount
@@ -408,21 +407,10 @@ export default function SelfMode() {
         return (
           <Card variant="elevated" padding="lg" className="animate-fade-in">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              Set Your Context
+              Level of Depth
             </h2>
 
             <div className="space-y-6">
-              {/* Timeframe */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  What timeframe are you reflecting on?
-                </label>
-                <TimeframeSelector
-                  selected={state.timeframe}
-                  onChange={(t) => setTimeframe(t as Timeframe)}
-                />
-              </div>
-
               {/* Intensity */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -445,7 +433,7 @@ export default function SelfMode() {
                 variant="primary"
                 className="flex-1"
                 onClick={handleContextComplete}
-                disabled={!state.timeframe || !state.intensity}
+                disabled={!state.intensity}
               >
                 Start Reflection
               </Button>

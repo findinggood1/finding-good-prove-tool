@@ -46,7 +46,7 @@ type Step =
 export default function SelfMode() {
   const navigate = useNavigate();
   const { email, isAuthenticated, login, isLoading: authLoading } = useAuth();
-  const { state, setMode, setTimeframe, setIntensity, toggleFiresFocus, setSelectedQuestions, setInterpretation, resetSession } = useApp();
+  const { state, setMode, setGoalChallenge, setTimeframe, setIntensity, toggleFiresFocus, setSelectedQuestions, setInterpretation, resetSession } = useApp();
 
   // Local state
   const [step, setStep] = useState<Step>('email');
@@ -56,9 +56,9 @@ export default function SelfMode() {
   const [answers, setAnswers] = useState<string[]>([]);
   const [, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // NEW: Goal/Challenge state
-  const [goalChallenge, setGoalChallenge] = useState('');
+
+  // Local UI state for goal input
+  const [goalInput, setGoalInput] = useState('');
   
   // Pulse state
   const [pulseScores, setPulseScores] = useState({ clarity: 3, confidence: 3, influence: 3 });
@@ -271,11 +271,12 @@ export default function SelfMode() {
 
   // Handle goal submission
   const handleGoalSubmit = () => {
-    if (!goalChallenge.trim()) {
-      setError('Please describe what you accomplished');
+    if (!goalInput.trim() || goalInput.trim().length < 20) {
+      setError('Please provide at least 20 characters describing what you accomplished');
       return;
     }
     setError(null);
+    setGoalChallenge(goalInput.trim());
     setStep('context');
   };
 
@@ -365,12 +366,13 @@ export default function SelfMode() {
             </p>
 
             <Textarea
-              value={goalChallenge}
-              onChange={(e) => setGoalChallenge(e.target.value)}
+              value={goalInput}
+              onChange={(e) => setGoalInput(e.target.value)}
               placeholder="e.g., I led that difficult client meeting, finished the project ahead of schedule, handled the team conflict constructively..."
               rows={4}
               maxLength={500}
               showCount
+              helperText={goalInput.length < 20 ? `At least 20 characters for a meaningful reflection (${goalInput.length}/20)` : undefined}
             />
 
             {error && <ErrorMessage message={error} className="mt-4" />}
@@ -383,7 +385,7 @@ export default function SelfMode() {
                 variant="primary"
                 className="flex-1"
                 onClick={handleGoalSubmit}
-                disabled={!goalChallenge.trim()}
+                disabled={goalInput.trim().length < 20}
               >
                 Continue
               </Button>
@@ -436,15 +438,19 @@ export default function SelfMode() {
 
             {error && <ErrorMessage message={error} className="mt-4" />}
 
-            <Button
-              variant="primary"
-              fullWidth
-              className="mt-8"
-              onClick={handleContextComplete}
-              disabled={!state.timeframe || !state.intensity}
-            >
-              Start Reflection
-            </Button>
+            <div className="flex gap-3 mt-8">
+              <Button variant="ghost" onClick={() => setStep('goal')}>
+                Back
+              </Button>
+              <Button
+                variant="primary"
+                className="flex-1"
+                onClick={handleContextComplete}
+                disabled={!state.timeframe || !state.intensity}
+              >
+                Start Reflection
+              </Button>
+            </div>
           </Card>
         );
 

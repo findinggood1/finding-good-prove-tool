@@ -375,22 +375,27 @@ export function getQuestionsByFilter(
 
 /**
  * Select random questions for a validation session
- * Returns 3 questions, one from each selected FIRES element (or random if fewer selected)
+ * - Light: 3 questions
+ * - Balanced: 4 questions
+ * - Deeper: 5 questions
  */
 export function selectQuestionsForSession(
   firesFocus: FIRESElement[],
   intensity: Intensity
 ): Question[] {
+  // Determine question count based on intensity
+  const questionCount = intensity === 'light' ? 3 : intensity === 'balanced' ? 4 : 5;
+
   const selected: Question[] = [];
-  
+
   // Get questions matching the intensity
   const intensityQuestions = questions.filter(q => q.intensity === intensity);
-  
-  // If we have FIRES focus elements, select one question from each (up to 3)
+
+  // If we have FIRES focus elements, select one question from each
   if (firesFocus.length > 0) {
     const shuffledFocus = [...firesFocus].sort(() => Math.random() - 0.5);
-    const elementsToUse = shuffledFocus.slice(0, 3);
-    
+    const elementsToUse = shuffledFocus.slice(0, questionCount);
+
     for (const element of elementsToUse) {
       const elementQuestions = intensityQuestions.filter(q => q.element === element);
       if (elementQuestions.length > 0) {
@@ -399,9 +404,9 @@ export function selectQuestionsForSession(
       }
     }
   }
-  
+
   // If we still need more questions, fill from remaining pool
-  while (selected.length < 3) {
+  while (selected.length < questionCount) {
     const remaining = intensityQuestions.filter(
       q => !selected.some(s => s.id === q.id)
     );
@@ -409,7 +414,7 @@ export function selectQuestionsForSession(
     const randomIndex = Math.floor(Math.random() * remaining.length);
     selected.push(remaining[randomIndex]);
   }
-  
+
   return selected;
 }
 

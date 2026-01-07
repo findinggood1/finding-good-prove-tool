@@ -66,8 +66,7 @@ export default function OtherMode() {
       recipient_name: recipientName,
       sender_context: successDescription,
       timeframe: 'week', // Default for Other mode
-      intensity: 'balanced', // Default for Other mode
-      fires_focus: [] // Not used in simplified Other mode
+      intensity: 'balanced' // Default for Other mode
     });
 
     if (result.success && result.data) {

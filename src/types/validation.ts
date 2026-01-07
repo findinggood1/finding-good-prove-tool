@@ -121,7 +121,7 @@ export interface ValidationInvitation {
   sender_context: string;
   timeframe: Timeframe;
   intensity: Intensity;
-  fires_focus: FIRESElement[];
+  fires_focus?: FIRESElement[]; // Optional - not used in simplified Other mode
   status: 'pending' | 'viewed' | 'completed' | 'expired';
   sender_validation_id?: string;
   recipient_validation_id?: string;

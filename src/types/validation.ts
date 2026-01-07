@@ -150,7 +150,7 @@ export interface Prediction {
   validation_id?: string | null;
   prediction_text: string;
   timeframe: Timeframe;
-  fires_focus: FIRESElement[];
+  fires_focus?: FIRESElement[];  // Optional - removed from UI
   status: 'pending' | 'reviewed';
   outcome_text?: string;
   outcome_accuracy?: number;  // 1-5

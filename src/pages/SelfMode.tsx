@@ -307,7 +307,6 @@ export default function SelfMode() {
       validation_id: validationId || null,
       prediction_text: predictionText,
       timeframe: state.timeframe!,
-      fires_focus: state.firesFocus,
       status: 'pending'
     });
 

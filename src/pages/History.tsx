@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Container, Header, Card, Button, LoadingSpinner, Badge, EmptyState } from '../components/ui';
 import { getValidations } from '../lib/api';
 import { signalInfo, firesInfo } from '../lib/questions';
-import type { Validation } from '../types/validation';
+import type { Validation, FIRESElement } from '../types/validation';
 
 export default function History() {
   const navigate = useNavigate();
@@ -127,20 +127,28 @@ export default function History() {
                         <p className="text-gray-900 font-medium line-clamp-2">
                           "{v.validation_insight}"
                         </p>
-                        <div className="flex gap-2 mt-3">
-                          {v.fires_focus.map((f) => (
-                            <span
-                              key={f}
-                              className="text-xs px-2 py-1 rounded-full"
-                              style={{ 
-                                backgroundColor: `${firesInfo[f].color}20`,
-                                color: firesInfo[f].color 
-                              }}
-                            >
-                              {firesInfo[f].label}
-                            </span>
-                          ))}
-                        </div>
+                        {v.fires_extracted && (
+                          <div className="flex gap-2 mt-3">
+                            {Object.entries(v.fires_extracted).map(([key, value]) => {
+                              if (value.present) {
+                                const element = key as FIRESElement;
+                                return (
+                                  <span
+                                    key={element}
+                                    className="text-xs px-2 py-1 rounded-full"
+                                    style={{
+                                      backgroundColor: `${firesInfo[element].color}20`,
+                                      color: firesInfo[element].color
+                                    }}
+                                  >
+                                    {firesInfo[element].label}
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 ml-4">
                         <span className="text-sm text-gray-500">

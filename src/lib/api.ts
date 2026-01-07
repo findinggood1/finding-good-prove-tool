@@ -63,7 +63,6 @@ export async function saveValidation(validation: Omit<Validation, 'id' | 'create
       goal_challenge: validation.goal_challenge?.substring(0, 50) + '...',
       timeframe: validation.timeframe,
       intensity: validation.intensity,
-      fires_focus: validation.fires_focus,
       responses_count: validation.responses?.length,
       has_fires_extracted: !!validation.fires_extracted,
       has_proof_line: !!validation.proof_line,

@@ -97,14 +97,13 @@ export interface Validation {
   mode: 'self' | 'other_sender' | 'other_recipient';
   timeframe: Timeframe;
   intensity: Intensity;
-  fires_focus: FIRESElement[];
   goal_challenge: string;              // NEW: What they accomplished
   responses: QuestionResponse[];
   validation_signal: ValidationSignal;
   validation_insight: string;
   scores: ValidationScores;
   pattern: ValidationPattern;
-  fires_extracted?: FIRESExtracted;    // NEW: AI-extracted FIRES elements
+  fires_extracted?: FIRESExtracted;    // NEW: AI-extracted FIRES elements (replaces fires_focus)
   proof_line?: string;                 // NEW: Shareable one-sentence summary
   event_code?: string;
   invitation_id?: string;
@@ -243,10 +242,9 @@ export interface ApiResponse<T> {
 // Edge Function Request/Response
 export interface InterpretRequest {
   mode: 'self' | 'recipient';
-  goal_challenge: string;              // NEW: What they accomplished
+  goal_challenge: string;              // What they accomplished
   timeframe: Timeframe;
   intensity: Intensity;
-  fires_focus: FIRESElement[];
   responses: QuestionResponse[];
   sender_context?: string;
   sender_name?: string;

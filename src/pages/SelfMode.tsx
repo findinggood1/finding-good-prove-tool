@@ -196,7 +196,6 @@ export default function SelfMode() {
         goal_challenge: state.goalChallenge!,
         timeframe: state.timeframe!,
         intensity: state.intensity!,
-        fires_focus: state.firesFocus,
         responses
       });
 
@@ -227,7 +226,6 @@ export default function SelfMode() {
         goal_challenge: state.goalChallenge!,
         timeframe: state.timeframe!,
         intensity: state.intensity!,
-        fires_focus: state.firesFocus,
         responses,
         validation_signal: interpretation.validationSignal,
         validation_insight: interpretation.validationInsight,

@@ -135,16 +135,16 @@ export default function RecipientView() {
 
     // Call AI interpretation
     // Use defaults since Send to Others mode doesn't collect these
-    const timeframe = invitation!.timeframe || 'week';
-    const intensity = invitation!.intensity || 'balanced';
+    const timeframe = 'week';
+    const intensity = 'balanced';
 
     const interpretResult = await interpretValidation({
       mode: 'recipient',
-      goal_challenge: invitation!.sender_context,
+      goal_challenge: invitation!.what_sender_noticed,
       timeframe,
       intensity,
       responses,
-      sender_context: invitation!.sender_context,
+      sender_context: invitation!.what_sender_noticed,
       sender_name: invitation!.sender_name,
       recipient_name: invitation!.recipient_name
     });
@@ -164,7 +164,7 @@ export default function RecipientView() {
       mode: 'other_recipient',
       timeframe,
       intensity,
-      goal_challenge: invitation!.sender_context,
+      goal_challenge: invitation!.what_sender_noticed,
       responses,
       validation_signal: interpretData.validationSignal,
       validation_insight: interpretData.validationInsight,
@@ -182,7 +182,7 @@ export default function RecipientView() {
         recipientEmail,
         saveResult.data.id,
         {
-          whatSenderSaw: invitation!.sender_context,
+          whatSenderSaw: invitation!.what_sender_noticed,
           whatRecipientRevealed: interpretData.proofLine || interpretData.validationInsight,
           sharedTruth: interpretData.pattern.whatWorked
         }
@@ -220,7 +220,7 @@ export default function RecipientView() {
 
             <div className="bg-fg-light rounded-lg p-4 mb-6">
               <p className="text-sm text-gray-500 mb-2">What they noticed:</p>
-              <p className="text-gray-900 italic">"{invitation?.sender_context}"</p>
+              <p className="text-gray-900 italic">"{invitation?.what_sender_noticed}"</p>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -458,7 +458,7 @@ export default function RecipientView() {
               <h3 className="text-sm font-medium text-gray-500 mb-2">
                 What {invitation?.sender_name || 'they'} noticed:
               </h3>
-              <p className="text-gray-700 italic">"{invitation?.sender_context}"</p>
+              <p className="text-gray-700 italic">"{invitation?.what_sender_noticed}"</p>
             </Card>
 
             {/* Actions */}

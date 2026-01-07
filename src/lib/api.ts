@@ -141,10 +141,14 @@ export async function createInvitation(invitation: {
     // Generate unique share_id
     const share_id = crypto.randomUUID().slice(0, 8);
 
+    // Map to actual database column names
     const { data, error } = await supabase
       .from('validation_invitations')
       .insert({
-        ...invitation,
+        sender_email: invitation.sender_email,
+        sender_name: invitation.sender_name,
+        recipient_name: invitation.recipient_name,
+        what_sender_noticed: invitation.sender_context, // Map to correct column name
         share_id,
         status: 'pending'
       })
@@ -466,7 +470,7 @@ export async function sendInvitationEmail(invitation: ValidationInvitation): Pro
         sender_email: invitation.sender_email,
         recipient_name: invitation.recipient_name,
         share_url: `${window.location.origin}/v/${invitation.share_id}`,
-        sender_context: invitation.sender_context,
+        sender_context: invitation.what_sender_noticed,
         timestamp: new Date().toISOString()
       })
     });

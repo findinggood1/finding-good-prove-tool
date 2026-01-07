@@ -118,10 +118,8 @@ export interface ValidationInvitation {
   sender_name?: string;
   recipient_email?: string;
   recipient_name: string;
-  sender_context: string;
-  timeframe?: Timeframe; // Optional - not used in simplified Other mode
-  intensity?: Intensity; // Optional - not used in simplified Other mode
-  fires_focus?: FIRESElement[]; // Optional - not used in simplified Other mode
+  what_sender_noticed: string; // Actual database column name
+  recipient_intensity?: string; // Actual database column name (not used in simplified mode)
   status: 'pending' | 'viewed' | 'completed' | 'expired';
   sender_validation_id?: string;
   recipient_validation_id?: string;

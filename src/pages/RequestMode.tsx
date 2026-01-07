@@ -11,7 +11,7 @@ import {
   LoadingSpinner,
   ErrorMessage
 } from '../components/ui';
-import { createProofRequest, sendProofRequestEmail } from '../lib/api';
+import { createProofRequest } from '../lib/api';
 
 // Flow steps
 type Step = 
@@ -102,19 +102,20 @@ export default function RequestMode() {
 
       if (result.success && result.data) {
         setShareId(result.data.share_id);
-        
-        // Send email if recipient email provided
-        if (recipientEmail) {
-          await sendProofRequestEmail({
-            share_id: result.data.share_id,
-            requester_email: email,
-            requester_name: email.split('@')[0],
-            recipient_name: recipientName,
-            recipient_email: recipientEmail,
-            goal_challenge: goalChallenge
-          });
-        }
-        
+
+        // TODO: Email notifications will be added later via Supabase Edge Functions
+        // For now, the shareable link is the primary flow
+        // if (recipientEmail) {
+        //   await sendProofRequestEmail({
+        //     share_id: result.data.share_id,
+        //     requester_email: email,
+        //     requester_name: email.split('@')[0],
+        //     recipient_name: recipientName,
+        //     recipient_email: recipientEmail,
+        //     goal_challenge: goalChallenge
+        //   });
+        // }
+
         setStep('complete');
       } else {
         throw new Error(result.error || 'Failed to create request');
@@ -313,7 +314,7 @@ export default function RequestMode() {
                 className="flex-1"
                 onClick={handleSend}
               >
-                {recipientEmail ? 'Send Request' : 'Create Link'}
+                Create Link
               </Button>
             </div>
           </Card>
@@ -341,13 +342,10 @@ export default function RequestMode() {
             </div>
             
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              {recipientEmail ? 'Request Sent!' : 'Link Created!'}
+              Link Created!
             </h2>
             <p className="text-gray-600 mb-6">
-              {recipientEmail 
-                ? `We've sent an invitation to ${recipientName}. You'll be notified when they respond.`
-                : `Share this link with ${recipientName} to get their perspective.`
-              }
+              Share this link with {recipientName} to get their perspective.
             </p>
 
             {/* Share link */}

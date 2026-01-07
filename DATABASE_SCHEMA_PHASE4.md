@@ -51,7 +51,6 @@ The following columns are **NEW in Phase 4** and need to be added to the `valida
   goal_challenge: string,            // ❌ MISSING - needs to be added
   timeframe: 'day' | 'week' | 'month' | 'year', // EXISTS in DB
   intensity: 'light' | 'balanced' | 'deeper', // EXISTS in DB
-  fires_focus: FIRESElement[],       // EXISTS in DB (JSONB array)
   responses: QuestionResponse[],     // EXISTS in DB (JSONB array)
   validation_signal: 'emerging' | 'developing' | 'grounded', // EXISTS in DB
   validation_insight: string,        // EXISTS in DB
@@ -70,6 +69,8 @@ The following columns are **NEW in Phase 4** and need to be added to the `valida
 }
 ```
 
+**Note:** `fires_focus` has been removed. The AI now extracts FIRES elements from user responses instead of using pre-selected hints.
+
 ### Current Database Columns (Before Update)
 
 ```sql
@@ -78,7 +79,6 @@ client_email       TEXT         NOT NULL
 mode               TEXT         NOT NULL
 timeframe          TEXT         NOT NULL
 intensity          TEXT         NOT NULL
-fires_focus        JSONB        NOT NULL (array)
 responses          JSONB        NOT NULL (array)
 validation_signal  TEXT         NOT NULL
 validation_insight TEXT         NOT NULL
@@ -88,6 +88,8 @@ event_code         TEXT         NULLABLE
 invitation_id      UUID         NULLABLE
 created_at         TIMESTAMP    DEFAULT NOW()
 ```
+
+**Note:** If your database has a `fires_focus` column from earlier development, it's no longer used and can be safely ignored.
 
 ### Required Database Columns (After Update)
 

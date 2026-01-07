@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Container, Header, Card, Button, LoadingSpinner, Badge, EmptyState } from '../components/ui';
+import { Container, Header, Card, Button, LoadingSpinner, Badge, EmptyState, Input } from '../components/ui';
 import { getValidations, getMyProofRequests } from '../lib/api';
 import { signalInfo, firesInfo } from '../lib/questions';
-import type { Validation, FIRESElement, ProofRequest } from '../types/validation';
+import type { Validation, FIRESElement, ProofRequest, ValidationSignal } from '../types/validation';
 
 type Tab = 'proofs' | 'requests';
 
@@ -17,6 +17,12 @@ export default function History() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
+
+  // Filter states
+  const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSignal, setSelectedSignal] = useState<ValidationSignal | 'all'>('all');
+  const [selectedFires, setSelectedFires] = useState<FIRESElement | 'all'>('all');
 
   useEffect(() => {
     async function loadData() {
@@ -61,6 +67,48 @@ export default function History() {
   const toggleExpandRequest = (id: string) => {
     setExpandedRequestId(expandedRequestId === id ? null : id);
   };
+
+  // Filter and search validations
+  const filteredValidations = useMemo(() => {
+    return validations.filter((v) => {
+      // Search query filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesGoal = v.goal_challenge?.toLowerCase().includes(query);
+        const matchesInsight = v.validation_insight?.toLowerCase().includes(query);
+        const matchesPattern =
+          v.pattern?.whatWorked?.toLowerCase().includes(query) ||
+          v.pattern?.whyItWorked?.toLowerCase().includes(query) ||
+          v.pattern?.howToRepeat?.toLowerCase().includes(query);
+
+        if (!matchesGoal && !matchesInsight && !matchesPattern) {
+          return false;
+        }
+      }
+
+      // Signal filter
+      if (selectedSignal !== 'all' && v.validation_signal !== selectedSignal) {
+        return false;
+      }
+
+      // FIRES element filter
+      if (selectedFires !== 'all') {
+        if (!v.fires_extracted || !v.fires_extracted[selectedFires]?.present) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [validations, searchQuery, selectedSignal, selectedFires]);
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedSignal('all');
+    setSelectedFires('all');
+  };
+
+  const hasActiveFilters = searchQuery || selectedSignal !== 'all' || selectedFires !== 'all';
 
   const getStatusBadge = (status: ProofRequest['status']) => {
     const styles = {
@@ -140,6 +188,137 @@ export default function History() {
           </button>
         </div>
 
+        {/* Filters for Proofs tab */}
+        {activeTab === 'proofs' && validations.length > 0 && (
+          <div className="mb-6">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 text-sm text-fg-primary hover:text-fg-primary-dark transition-colors mb-3"
+            >
+              <svg
+                className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
+              {hasActiveFilters && (
+                <span className="text-xs bg-fg-accent text-gray-700 px-2 py-0.5 rounded-full">
+                  Active
+                </span>
+              )}
+            </button>
+
+            {showFilters && (
+              <Card variant="outlined" padding="md" className="animate-fade-in">
+                <div className="space-y-4">
+                  {/* Search */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Search
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="Search in goals, insights, or patterns..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Signal Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Signal Level
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setSelectedSignal('all')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                          selectedSignal === 'all'
+                            ? 'bg-fg-primary text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        All
+                      </button>
+                      {(['emerging', 'developing', 'grounded'] as ValidationSignal[]).map((signal) => (
+                        <button
+                          key={signal}
+                          onClick={() => setSelectedSignal(signal)}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                            selectedSignal === signal
+                              ? 'text-white'
+                              : 'text-gray-700 hover:opacity-80'
+                          }`}
+                          style={{
+                            backgroundColor: selectedSignal === signal ? signalInfo[signal].color : '#F3F4F6'
+                          }}
+                        >
+                          {signalInfo[signal].label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* FIRES Element Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      FIRES Element
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setSelectedFires('all')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                          selectedFires === 'all'
+                            ? 'bg-fg-primary text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        All
+                      </button>
+                      {(['feelings', 'influence', 'resilience', 'ethics', 'strengths'] as FIRESElement[]).map((element) => (
+                        <button
+                          key={element}
+                          onClick={() => setSelectedFires(element)}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                            selectedFires === element
+                              ? 'text-white'
+                              : 'hover:opacity-80'
+                          }`}
+                          style={{
+                            backgroundColor: selectedFires === element
+                              ? firesInfo[element].color
+                              : `${firesInfo[element].color}20`,
+                            color: selectedFires === element ? 'white' : firesInfo[element].color
+                          }}
+                        >
+                          {firesInfo[element].label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Clear Filters */}
+                  {hasActiveFilters && (
+                    <div className="pt-2 border-t border-gray-200">
+                      <Button variant="ghost" size="sm" onClick={clearFilters}>
+                        Clear All Filters
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Results count */}
+                  <div className="text-sm text-gray-600">
+                    Showing {filteredValidations.length} of {validations.length} proof{validations.length !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              </Card>
+            )}
+          </div>
+        )}
+
         {/* My Proofs Tab */}
         {activeTab === 'proofs' && (validations.length === 0 ? (
           <EmptyState
@@ -156,9 +335,16 @@ export default function History() {
               </Button>
             }
           />
+        ) : filteredValidations.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 mb-4">No proofs match your current filters</p>
+            <Button variant="ghost" onClick={clearFilters}>
+              Clear Filters
+            </Button>
+          </div>
         ) : (
           <div className="space-y-4">
-            {validations.map((v) => {
+            {filteredValidations.map((v) => {
               const signal = signalInfo[v.validation_signal];
               const isExpanded = expandedId === v.id;
 

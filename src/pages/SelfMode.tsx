@@ -19,16 +19,16 @@ import {
   ErrorMessage
 } from '../components/ui';
 import { selectQuestionsForSession, getPulseQuestionsForWeek, getCurrentRotationWeek, firesInfo, signalInfo } from '../lib/questions';
-import { 
-  saveValidation, 
-  savePulseResponse, 
-  savePrediction, 
+import {
+  // saveValidation,  // TODO: Phase 4 - Uncomment for database save
+  savePulseResponse,
+  savePrediction,
   getPendingPredictions,
   reviewPrediction,
-  interpretValidation,
-  hasPulseForCurrentWeek 
+  // interpretValidation,  // TODO: Phase 4 - Uncomment for real Edge Function call
+  hasPulseForCurrentWeek
 } from '../lib/api';
-import type { FIRESElement, Timeframe, Intensity, QuestionResponse, Prediction } from '../types/validation';
+import type { FIRESElement, Timeframe, Intensity, /* QuestionResponse, */ Prediction } from '../types/validation';
 
 // Flow steps - now includes 'goal' step
 type Step = 
@@ -164,46 +164,57 @@ export default function SelfMode() {
     setError(null);
 
     try {
+      // TODO: Phase 4 - Uncomment when implementing real Edge Function
       // Build responses
-      const responses: QuestionResponse[] = state.selectedQuestions.map((q, i) => ({
-        questionId: q.id,
-        questionText: q.text,
-        element: q.element,
-        answer: answers[i]
-      }));
+      // const responses: QuestionResponse[] = state.selectedQuestions.map((q, i) => ({
+      //   questionId: q.id,
+      //   questionText: q.text,
+      //   element: q.element,
+      //   answer: answers[i]
+      // }));
 
-      // Call Edge Function
-      const result = await interpretValidation({
-        mode: 'self',
-        goal_challenge: state.goalChallenge!,
-        timeframe: state.timeframe!,
-        intensity: state.intensity!,
-        fires_focus: state.firesFocus,
-        responses
-      });
+      // For Phase 3, using mock data to test flow
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
 
-      if (result.success && result.data) {
-        setInterpretation(result.data);
-        
-        // Save to database
-        await saveValidation({
-          client_email: email!,
-          mode: 'self',
-          goal_challenge: state.goalChallenge!,
-          timeframe: state.timeframe!,
-          intensity: state.intensity!,
-          fires_focus: state.firesFocus,
-          responses,
-          validation_signal: result.data.validationSignal,
-          validation_insight: result.data.validationInsight,
-          scores: result.data.scores,
-          pattern: result.data.pattern
-        });
+      // Mock interpretation data
+      const mockInterpretation = {
+        validationSignal: 'developing' as const,
+        validationInsight: 'You succeeded by taking ownership of the situation and staying focused on what you could control. Your thoughtful approach made the difference.',
+        scores: {
+          replication: 4,
+          clarity: 4,
+          ownership: 3
+        },
+        pattern: {
+          whatWorked: 'You broke down the challenge into manageable steps and took deliberate action on each one.',
+          whyItWorked: 'This systematic approach kept you from feeling overwhelmed and allowed you to maintain momentum.',
+          howToRepeat: 'Next time, start by identifying the key components and create a clear action plan before diving in.'
+        },
+        proofLine: `I ${state.goalChallenge?.substring(0, 100)} by taking ownership and staying focused.`,
+        firesExtracted: {
+          influence: { present: true, strength: 4, evidence: 'Took deliberate action' },
+          resilience: { present: true, strength: 3, evidence: 'Stayed focused' }
+        }
+      };
 
-        setStep('results');
-      } else {
-        throw new Error(result.error || 'Failed to generate interpretation');
-      }
+      setInterpretation(mockInterpretation);
+
+      // TODO: Phase 4 - Uncomment to save to database
+      // await saveValidation({
+      //   client_email: email!,
+      //   mode: 'self',
+      //   goal_challenge: state.goalChallenge!,
+      //   timeframe: state.timeframe!,
+      //   intensity: state.intensity!,
+      //   fires_focus: state.firesFocus,
+      //   responses,
+      //   validation_signal: mockInterpretation.validationSignal,
+      //   validation_insight: mockInterpretation.validationInsight,
+      //   scores: mockInterpretation.scores,
+      //   pattern: mockInterpretation.pattern
+      // });
+
+      setStep('results');
     } catch (err) {
       console.error('Generation error:', err);
       setError(String(err));
@@ -535,6 +546,51 @@ export default function SelfMode() {
                 </div>
               </div>
             </Card>
+
+            {/* Proof Line */}
+            {interpretation.proofLine && (
+              <Card variant="elevated" padding="lg" className="bg-fg-accent bg-opacity-10 border-2 border-fg-accent">
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Your Proof Line</h3>
+                <p className="text-lg font-semibold text-gray-900">
+                  {interpretation.proofLine}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => {
+                    navigator.clipboard.writeText(interpretation.proofLine || '');
+                  }}
+                >
+                  Copy Proof Line
+                </Button>
+              </Card>
+            )}
+
+            {/* FIRES Extracted */}
+            {interpretation.firesExtracted && (
+              <Card variant="outlined" padding="md">
+                <h3 className="text-sm font-medium text-gray-500 mb-3">FIRES Elements Detected</h3>
+                <div className="space-y-2">
+                  {Object.entries(interpretation.firesExtracted).map(([key, value]) => {
+                    if (value.present) {
+                      const elementInfo = firesInfo[key as FIRESElement];
+                      return (
+                        <div key={key} className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: elementInfo.color }}
+                          />
+                          <span className="text-sm font-medium text-gray-700">{elementInfo.label}</span>
+                          <span className="text-xs text-gray-500 ml-auto">Strength: {value.strength}/5</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              </Card>
+            )}
 
             {/* Scores */}
             <Card variant="outlined" padding="md">

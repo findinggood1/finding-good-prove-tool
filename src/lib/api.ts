@@ -607,9 +607,28 @@ export async function completeProofRequest(
 }
 
 /**
+ * Get proof requests created by a user
+ */
+export async function getMyProofRequests(email: string): Promise<ApiResponse<ProofRequest[]>> {
+  try {
+    const { data, error } = await supabase
+      .from('proof_requests')
+      .select('*')
+      .eq('requester_email', email)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return { success: true, data: data || [] };
+  } catch (error) {
+    console.error('Error getting proof requests:', error);
+    return { success: false, error: String(error) };
+  }
+}
+
+/**
  * Send proof request email via Zapier
  */
-export async function sendProofRequestEmail(request: { 
+export async function sendProofRequestEmail(request: {
   share_id: string;
   requester_email: string;
   requester_name?: string;

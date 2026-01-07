@@ -163,6 +163,17 @@ export default function SelfMode() {
 
   // Generate AI interpretation
   const generateInterpretation = async () => {
+    console.log('[SelfMode] Starting interpretation generation');
+    console.log('[SelfMode] Current state:', {
+      email,
+      goalChallenge: state.goalChallenge,
+      timeframe: state.timeframe,
+      intensity: state.intensity,
+      firesFocus: state.firesFocus,
+      questionsCount: state.selectedQuestions.length,
+      answersCount: answers.length
+    });
+
     setStep('generating');
     setIsGenerating(true);
     setError(null);
@@ -176,7 +187,10 @@ export default function SelfMode() {
         answer: answers[i]
       }));
 
+      console.log('[SelfMode] Built responses:', responses.length, 'responses');
+
       // Call Edge Function for AI interpretation
+      console.log('[SelfMode] Calling interpretValidation...');
       const interpretResult = await interpretValidation({
         mode: 'self',
         goal_challenge: state.goalChallenge!,
@@ -186,17 +200,30 @@ export default function SelfMode() {
         responses
       });
 
+      console.log('[SelfMode] interpretValidation result:', {
+        success: interpretResult.success,
+        hasData: !!interpretResult.data,
+        error: interpretResult.error
+      });
+
       if (!interpretResult.success || !interpretResult.data) {
         throw new Error(interpretResult.error || 'Failed to generate interpretation');
       }
 
       const interpretation = interpretResult.data;
+      console.log('[SelfMode] Received interpretation:', {
+        signal: interpretation.validationSignal,
+        hasProofLine: !!interpretation.proofLine,
+        hasFIRES: !!interpretation.firesExtracted
+      });
+
       setInterpretation(interpretation);
 
       // Save to database
-      const saveResult = await saveValidation({
+      console.log('[SelfMode] Calling saveValidation...');
+      const validationData = {
         client_email: email!,
-        mode: 'self',
+        mode: 'self' as const,
         goal_challenge: state.goalChallenge!,
         timeframe: state.timeframe!,
         intensity: state.intensity!,
@@ -208,16 +235,37 @@ export default function SelfMode() {
         pattern: interpretation.pattern,
         fires_extracted: interpretation.firesExtracted,
         proof_line: interpretation.proofLine
+      };
+
+      console.log('[SelfMode] Validation data to save:', {
+        client_email: validationData.client_email,
+        mode: validationData.mode,
+        timeframe: validationData.timeframe,
+        intensity: validationData.intensity,
+        has_goal: !!validationData.goal_challenge,
+        has_responses: validationData.responses.length,
+        has_fires_extracted: !!validationData.fires_extracted,
+        has_proof_line: !!validationData.proof_line
+      });
+
+      const saveResult = await saveValidation(validationData);
+
+      console.log('[SelfMode] saveValidation result:', {
+        success: saveResult.success,
+        hasData: !!saveResult.data,
+        error: saveResult.error
       });
 
       if (!saveResult.success) {
-        console.error('Failed to save validation:', saveResult.error);
+        console.error('[SelfMode] Failed to save validation:', saveResult.error);
         // Don't block the user, just log the error
+      } else {
+        console.log('[SelfMode] Successfully saved validation with ID:', saveResult.data?.id);
       }
 
       setStep('results');
     } catch (err) {
-      console.error('Generation error:', err);
+      console.error('[SelfMode] Generation error:', err);
       setError(String(err));
       setStep('questions'); // Go back to questions on error
     } finally {

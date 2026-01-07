@@ -57,16 +57,34 @@ export async function getOrCreateClient(email: string): Promise<ApiResponse<{ em
  */
 export async function saveValidation(validation: Omit<Validation, 'id' | 'created_at'>): Promise<ApiResponse<Validation>> {
   try {
+    console.log('[saveValidation] Starting save with data:', {
+      client_email: validation.client_email,
+      mode: validation.mode,
+      goal_challenge: validation.goal_challenge?.substring(0, 50) + '...',
+      timeframe: validation.timeframe,
+      intensity: validation.intensity,
+      fires_focus: validation.fires_focus,
+      responses_count: validation.responses?.length,
+      has_fires_extracted: !!validation.fires_extracted,
+      has_proof_line: !!validation.proof_line,
+      validation_signal: validation.validation_signal
+    });
+
     const { data, error } = await supabase
       .from('validations')
       .insert(validation)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[saveValidation] Supabase error:', error);
+      throw error;
+    }
+
+    console.log('[saveValidation] Successfully saved validation with id:', data?.id);
     return { success: true, data };
   } catch (error) {
-    console.error('Error saving validation:', error);
+    console.error('[saveValidation] Caught error:', error);
     return { success: false, error: String(error) };
   }
 }
@@ -387,7 +405,15 @@ export async function reviewPrediction(
 export async function interpretValidation(request: InterpretRequest): Promise<InterpretResponse> {
   try {
     const url = getEdgeFunctionUrl('validation-interpret');
-    
+    console.log('[interpretValidation] Calling Edge Function at:', url);
+    console.log('[interpretValidation] Request:', {
+      mode: request.mode,
+      goal_challenge: request.goal_challenge?.substring(0, 50) + '...',
+      timeframe: request.timeframe,
+      intensity: request.intensity,
+      responses_count: request.responses?.length
+    });
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -397,15 +423,27 @@ export async function interpretValidation(request: InterpretRequest): Promise<In
       body: JSON.stringify(request)
     });
 
+    console.log('[interpretValidation] Response status:', response.status);
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('[interpretValidation] Error response:', errorText);
       throw new Error(`Edge function error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('[interpretValidation] Response data:', {
+      validationSignal: data.validationSignal,
+      hasInsight: !!data.validationInsight,
+      hasScores: !!data.scores,
+      hasPattern: !!data.pattern,
+      hasProofLine: !!data.proofLine,
+      hasFIRES: !!data.firesExtracted
+    });
+
     return { success: true, data };
   } catch (error) {
-    console.error('Error calling interpretation:', error);
+    console.error('[interpretValidation] Caught error:', error);
     return { success: false, error: String(error) };
   }
 }

@@ -9,7 +9,6 @@ import {
   Button,
   Input,
   Textarea,
-  TimeframeSelector,
   IntensitySelector,
   QuestionCard,
   LoadingSpinner,
@@ -27,7 +26,7 @@ import {
   interpretValidation,
   hasPulseForCurrentWeek
 } from '../lib/api';
-import type { FIRESElement, Intensity, Timeframe, QuestionResponse, Prediction } from '../types/validation';
+import type { FIRESElement, Intensity, QuestionResponse, Prediction } from '../types/validation';
 
 // Flow steps - now includes 'goal' step
 type Step = 
@@ -121,14 +120,13 @@ export default function SelfMode() {
 
   // Handle context setup complete
   const handleContextComplete = () => {
-    if (!state.timeframe) {
-      setError('Please select a timeframe');
-      return;
-    }
     if (!state.intensity) {
       setError('Please select an intensity level');
       return;
     }
+
+    // Set default timeframe to 'week' since user describes it naturally in goal
+    setTimeframe('week');
 
     // Pass empty array for firesFocus - AI extracts FIRES elements from responses
     const questions = selectQuestionsForSession(
@@ -423,7 +421,7 @@ export default function SelfMode() {
         return (
           <Card variant="elevated" padding="lg" className="animate-fade-in">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Describe what you accomplished and when it happened
+              Describe a goal, challenge, or experience you want to validate and when it happened
             </h2>
             <p className="text-gray-600 mb-6">
               Include the timeframe naturally in your description (e.g., "this week", "yesterday", "over the past month").
@@ -461,31 +459,17 @@ export default function SelfMode() {
         return (
           <Card variant="elevated" padding="lg" className="animate-fade-in">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              Set Your Context
+              Level of Depth
             </h2>
 
-            <div className="space-y-6">
-              {/* Timeframe */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  When did this happen?
-                </label>
-                <TimeframeSelector
-                  selected={state.timeframe}
-                  onChange={(t) => setTimeframe(t as Timeframe)}
-                />
-              </div>
-
-              {/* Intensity */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  How deep do you want to go?
-                </label>
-                <IntensitySelector
-                  selected={state.intensity}
-                  onChange={(i) => setIntensity(i as Intensity)}
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                How deep do you want to go?
+              </label>
+              <IntensitySelector
+                selected={state.intensity}
+                onChange={(i) => setIntensity(i as Intensity)}
+              />
             </div>
 
             {error && <ErrorMessage message={error} className="mt-4" />}
@@ -498,7 +482,7 @@ export default function SelfMode() {
                 variant="primary"
                 className="flex-1"
                 onClick={handleContextComplete}
-                disabled={!state.timeframe || !state.intensity}
+                disabled={!state.intensity}
               >
                 Start Reflection
               </Button>

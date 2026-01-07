@@ -64,9 +64,7 @@ export default function OtherMode() {
       sender_email: email!,
       sender_name: senderName || email!.split('@')[0],
       recipient_name: recipientName,
-      sender_context: successDescription,
-      timeframe: 'week', // Default for Other mode
-      intensity: 'balanced' // Default for Other mode
+      sender_context: successDescription
     });
 
     if (result.success && result.data) {

@@ -5,8 +5,6 @@ import type {
   WeeklyPulseResponse,
   Prediction,
   ProofRequest,
-  Timeframe,
-  Intensity,
   InterpretRequest,
   InterpretResponse,
   ApiResponse
@@ -138,8 +136,6 @@ export async function createInvitation(invitation: {
   sender_name?: string;
   recipient_name: string;
   sender_context: string;
-  timeframe: Timeframe;
-  intensity: Intensity;
 }): Promise<ApiResponse<ValidationInvitation>> {
   try {
     // Generate unique share_id

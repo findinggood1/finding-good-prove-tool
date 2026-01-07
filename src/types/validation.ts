@@ -119,8 +119,8 @@ export interface ValidationInvitation {
   recipient_email?: string;
   recipient_name: string;
   sender_context: string;
-  timeframe: Timeframe;
-  intensity: Intensity;
+  timeframe?: Timeframe; // Optional - not used in simplified Other mode
+  intensity?: Intensity; // Optional - not used in simplified Other mode
   fires_focus?: FIRESElement[]; // Optional - not used in simplified Other mode
   status: 'pending' | 'viewed' | 'completed' | 'expired';
   sender_validation_id?: string;

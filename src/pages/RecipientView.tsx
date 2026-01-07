@@ -134,11 +134,15 @@ export default function RecipientView() {
     }));
 
     // Call AI interpretation
+    // Use defaults since Send to Others mode doesn't collect these
+    const timeframe = invitation!.timeframe || 'week';
+    const intensity = invitation!.intensity || 'balanced';
+
     const interpretResult = await interpretValidation({
       mode: 'recipient',
       goal_challenge: invitation!.sender_context,
-      timeframe: invitation!.timeframe,
-      intensity: invitation!.intensity,
+      timeframe,
+      intensity,
       responses,
       sender_context: invitation!.sender_context,
       sender_name: invitation!.sender_name,
@@ -158,8 +162,8 @@ export default function RecipientView() {
     const saveResult = await saveValidation({
       client_email: recipientEmail,
       mode: 'other_recipient',
-      timeframe: invitation!.timeframe,
-      intensity: invitation!.intensity,
+      timeframe,
+      intensity,
       goal_challenge: invitation!.sender_context,
       responses,
       validation_signal: interpretData.validationSignal,

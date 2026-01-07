@@ -58,16 +58,19 @@ export default function SelfMode() {
 
   // Local UI state for goal input
   const [goalInput, setGoalInput] = useState('');
-  
+
   // Pulse state
   const [pulseScores, setPulseScores] = useState({ clarity: 3, confidence: 3, influence: 3 });
   const [showPulse, setShowPulse] = useState(true);
-  
+
   // Prediction state
   const [predictionText, setPredictionText] = useState('');
   const [pendingPrediction, setPendingPrediction] = useState<Prediction | null>(null);
   const [predictionOutcome, setPredictionOutcome] = useState('');
   const [predictionAccuracy, setPredictionAccuracy] = useState(3);
+
+  // Store validation ID for pulse and prediction
+  const [validationId, setValidationId] = useState<string | null>(null);
 
   // Initialize mode
   useEffect(() => {
@@ -259,6 +262,10 @@ export default function SelfMode() {
         // Don't block the user, just log the error
       } else {
         console.log('[SelfMode] Successfully saved validation with ID:', saveResult.data?.id);
+        // Store validation ID for pulse and prediction
+        if (saveResult.data?.id) {
+          setValidationId(saveResult.data.id);
+        }
       }
 
       setStep('results');
@@ -278,7 +285,7 @@ export default function SelfMode() {
     const rotationWeek = getCurrentRotationWeek();
     await savePulseResponse({
       client_email: email,
-      validation_id: '', // Would need actual validation ID
+      validation_id: validationId || null,
       rotation_week: rotationWeek,
       clarity_score: pulseScores.clarity,
       confidence_score: pulseScores.confidence,
@@ -297,7 +304,7 @@ export default function SelfMode() {
 
     await savePrediction({
       client_email: email,
-      validation_id: '', // Would need actual validation ID
+      validation_id: validationId || null,
       prediction_text: predictionText,
       timeframe: state.timeframe!,
       fires_focus: state.firesFocus,

@@ -135,7 +135,7 @@ export interface ValidationInvitation {
 export interface WeeklyPulseResponse {
   id: string;
   client_email: string;
-  validation_id: string;
+  validation_id?: string | null;
   rotation_week: number;
   clarity_score: number;      // 1-5
   confidence_score: number;   // 1-5
@@ -147,7 +147,7 @@ export interface WeeklyPulseResponse {
 export interface Prediction {
   id: string;
   client_email: string;
-  validation_id: string;
+  validation_id?: string | null;
   prediction_text: string;
   timeframe: Timeframe;
   fires_focus: FIRESElement[];

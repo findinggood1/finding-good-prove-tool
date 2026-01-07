@@ -9,6 +9,7 @@ import {
   Button,
   Input,
   Textarea,
+  TimeframeSelector,
   IntensitySelector,
   QuestionCard,
   LoadingSpinner,
@@ -18,15 +19,15 @@ import {
 } from '../components/ui';
 import { selectQuestionsForSession, getPulseQuestionsForWeek, getCurrentRotationWeek, firesInfo, signalInfo } from '../lib/questions';
 import {
-  // saveValidation,  // TODO: Phase 4 - Uncomment for database save
+  saveValidation,
   savePulseResponse,
   savePrediction,
   getPendingPredictions,
   reviewPrediction,
-  // interpretValidation,  // TODO: Phase 4 - Uncomment for real Edge Function call
+  interpretValidation,
   hasPulseForCurrentWeek
 } from '../lib/api';
-import type { FIRESElement, Intensity, /* QuestionResponse, */ Prediction } from '../types/validation';
+import type { FIRESElement, Intensity, Timeframe, QuestionResponse, Prediction } from '../types/validation';
 
 // Flow steps - now includes 'goal' step
 type Step = 
@@ -44,7 +45,7 @@ type Step =
 export default function SelfMode() {
   const navigate = useNavigate();
   const { email, isAuthenticated, login, isLoading: authLoading } = useAuth();
-  const { state, setMode, setGoalChallenge, setIntensity, setSelectedQuestions, setInterpretation, resetSession } = useApp();
+  const { state, setMode, setGoalChallenge, setIntensity, setTimeframe, setSelectedQuestions, setInterpretation, resetSession } = useApp();
 
   // Local state
   const [step, setStep] = useState<Step>('email');
@@ -117,6 +118,10 @@ export default function SelfMode() {
 
   // Handle context setup complete
   const handleContextComplete = () => {
+    if (!state.timeframe) {
+      setError('Please select a timeframe');
+      return;
+    }
     if (!state.intensity) {
       setError('Please select an intensity level');
       return;
@@ -163,55 +168,52 @@ export default function SelfMode() {
     setError(null);
 
     try {
-      // TODO: Phase 4 - Uncomment when implementing real Edge Function
       // Build responses
-      // const responses: QuestionResponse[] = state.selectedQuestions.map((q, i) => ({
-      //   questionId: q.id,
-      //   questionText: q.text,
-      //   element: q.element,
-      //   answer: answers[i]
-      // }));
+      const responses: QuestionResponse[] = state.selectedQuestions.map((q, i) => ({
+        questionId: q.id,
+        questionText: q.text,
+        element: q.element,
+        answer: answers[i]
+      }));
 
-      // For Phase 3, using mock data to test flow
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
+      // Call Edge Function for AI interpretation
+      const interpretResult = await interpretValidation({
+        mode: 'self',
+        goal_challenge: state.goalChallenge!,
+        timeframe: state.timeframe!,
+        intensity: state.intensity!,
+        fires_focus: state.firesFocus,
+        responses
+      });
 
-      // Mock interpretation data
-      const mockInterpretation = {
-        validationSignal: 'developing' as const,
-        validationInsight: 'You succeeded by taking ownership of the situation and staying focused on what you could control. Your thoughtful approach made the difference.',
-        scores: {
-          replication: 4,
-          clarity: 4,
-          ownership: 3
-        },
-        pattern: {
-          whatWorked: 'You broke down the challenge into manageable steps and took deliberate action on each one.',
-          whyItWorked: 'This systematic approach kept you from feeling overwhelmed and allowed you to maintain momentum.',
-          howToRepeat: 'Next time, start by identifying the key components and create a clear action plan before diving in.'
-        },
-        proofLine: `I ${state.goalChallenge?.substring(0, 100)} by taking ownership and staying focused.`,
-        firesExtracted: {
-          influence: { present: true, strength: 4, evidence: 'Took deliberate action' },
-          resilience: { present: true, strength: 3, evidence: 'Stayed focused' }
-        }
-      };
+      if (!interpretResult.success || !interpretResult.data) {
+        throw new Error(interpretResult.error || 'Failed to generate interpretation');
+      }
 
-      setInterpretation(mockInterpretation);
+      const interpretation = interpretResult.data;
+      setInterpretation(interpretation);
 
-      // TODO: Phase 4 - Uncomment to save to database
-      // await saveValidation({
-      //   client_email: email!,
-      //   mode: 'self',
-      //   goal_challenge: state.goalChallenge!,
-      //   timeframe: state.timeframe!,
-      //   intensity: state.intensity!,
-      //   fires_focus: state.firesFocus,
-      //   responses,
-      //   validation_signal: mockInterpretation.validationSignal,
-      //   validation_insight: mockInterpretation.validationInsight,
-      //   scores: mockInterpretation.scores,
-      //   pattern: mockInterpretation.pattern
-      // });
+      // Save to database
+      const saveResult = await saveValidation({
+        client_email: email!,
+        mode: 'self',
+        goal_challenge: state.goalChallenge!,
+        timeframe: state.timeframe!,
+        intensity: state.intensity!,
+        fires_focus: state.firesFocus,
+        responses,
+        validation_signal: interpretation.validationSignal,
+        validation_insight: interpretation.validationInsight,
+        scores: interpretation.scores,
+        pattern: interpretation.pattern,
+        fires_extracted: interpretation.firesExtracted,
+        proof_line: interpretation.proofLine
+      });
+
+      if (!saveResult.success) {
+        console.error('Failed to save validation:', saveResult.error);
+        // Don't block the user, just log the error
+      }
 
       setStep('results');
     } catch (err) {
@@ -407,10 +409,21 @@ export default function SelfMode() {
         return (
           <Card variant="elevated" padding="lg" className="animate-fade-in">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              Level of Depth
+              Set Your Context
             </h2>
 
             <div className="space-y-6">
+              {/* Timeframe */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  When did this happen?
+                </label>
+                <TimeframeSelector
+                  selected={state.timeframe}
+                  onChange={(t) => setTimeframe(t as Timeframe)}
+                />
+              </div>
+
               {/* Intensity */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -433,7 +446,7 @@ export default function SelfMode() {
                 variant="primary"
                 className="flex-1"
                 onClick={handleContextComplete}
-                disabled={!state.intensity}
+                disabled={!state.timeframe || !state.intensity}
               >
                 Start Reflection
               </Button>

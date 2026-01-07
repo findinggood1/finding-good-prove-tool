@@ -1,9 +1,83 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Header, Card } from '../components/ui';
+import { useAuth } from '../contexts/AuthContext';
+import { Container, Header, Card, Input, Button } from '../components/ui';
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { email, isAuthenticated, login, logout, isLoading } = useAuth();
+  const [emailInput, setEmailInput] = useState('');
+  const [emailError, setEmailError] = useState('');
 
+  const handleEmailSubmit = async () => {
+    setEmailError('');
+
+    if (!emailInput || !emailInput.includes('@')) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+
+    const success = await login(emailInput);
+    if (!success) {
+      setEmailError('Unable to sign in. Please try again.');
+    }
+  };
+
+  // Show email input if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-fg-light">
+        <Container size="md" className="py-8">
+          <Header
+            title="Prove"
+            subtitle="Own the actions that created your outcomes"
+          />
+
+          <Card variant="elevated" padding="lg" className="mt-8">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Welcome
+              </h2>
+              <p className="text-gray-600">
+                Enter your email to get started
+              </p>
+            </div>
+
+            <div className="max-w-sm mx-auto space-y-4">
+              <Input
+                type="email"
+                label="Email Address"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleEmailSubmit()}
+                error={emailError}
+                placeholder="you@example.com"
+                disabled={isLoading}
+              />
+
+              <Button
+                variant="primary"
+                fullWidth
+                onClick={handleEmailSubmit}
+                loading={isLoading}
+                disabled={!emailInput}
+              >
+                Continue
+              </Button>
+            </div>
+
+            <div className="mt-6 text-center text-sm text-gray-500">
+              <p>
+                If you can't articulate how you got there, you can't repeat it.
+              </p>
+            </div>
+          </Card>
+        </Container>
+      </div>
+    );
+  }
+
+  // Show mode selection if authenticated
   return (
     <div className="min-h-screen bg-fg-light">
       <Container size="md" className="py-8">
@@ -15,6 +89,19 @@ export default function Landing() {
 
         {/* Main content */}
         <Card variant="elevated" padding="lg" className="mt-8">
+          {/* User info */}
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+            <div className="text-sm text-gray-600">
+              Signed in as <span className="font-medium text-gray-900">{email}</span>
+            </div>
+            <button
+              onClick={logout}
+              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
+
           <div className="text-center mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-3">
               How would you like to build proof?

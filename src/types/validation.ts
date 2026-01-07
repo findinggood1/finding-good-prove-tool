@@ -55,8 +55,39 @@ export interface ValidationInterpretation {
   validationInsight: string;
   scores: ValidationScores;
   pattern: ValidationPattern;
+  firesExtracted?: FIRESExtracted;     // NEW: AI-extracted FIRES elements
+  proofLine?: string;                  // NEW: Shareable summary
   alignment?: ValidationAlignment;
   giftToSender?: string;
+}
+
+// FIRES Extracted Analysis (from AI)
+export interface FIRESExtracted {
+  feelings?: {
+    present: boolean;
+    strength: number; // 1-5
+    evidence: string;
+  };
+  influence?: {
+    present: boolean;
+    strength: number; // 1-5
+    evidence: string;
+  };
+  resilience?: {
+    present: boolean;
+    strength: number; // 1-5
+    evidence: string;
+  };
+  ethics?: {
+    present: boolean;
+    strength: number; // 1-5
+    evidence: string;
+  };
+  strengths?: {
+    present: boolean;
+    strength: number; // 1-5
+    evidence: string;
+  };
 }
 
 // Full Validation Entry (database record)
@@ -67,11 +98,14 @@ export interface Validation {
   timeframe: Timeframe;
   intensity: Intensity;
   fires_focus: FIRESElement[];
+  goal_challenge: string;              // NEW: What they accomplished
   responses: QuestionResponse[];
   validation_signal: ValidationSignal;
   validation_insight: string;
   scores: ValidationScores;
   pattern: ValidationPattern;
+  fires_extracted?: FIRESExtracted;    // NEW: AI-extracted FIRES elements
+  proof_line?: string;                 // NEW: Shareable one-sentence summary
   event_code?: string;
   invitation_id?: string;
   created_at: string;
@@ -160,32 +194,33 @@ export interface PulseQuestion {
 // App Session State
 export interface AppState {
   // Mode
-  mode: 'self' | 'other' | null;
-  
+  mode: 'self' | 'other' | 'request' | null;
+
   // Context
+  goalChallenge: string | null;        // NEW: The thing that mattered
   timeframe: Timeframe | null;
   intensity: Intensity | null;
   firesFocus: FIRESElement[];
-  
+
   // Other mode specifics
   recipientName: string | null;
   senderContext: string | null;
-  
+
   // Questions flow
   selectedQuestions: Question[];
   currentQuestionIndex: number;
   responses: QuestionResponse[];
-  
+
   // Results
   interpretation: ValidationInterpretation | null;
-  
+
   // Pulse
   pulseScores: {
     clarity: number;
     confidence: number;
     influence: number;
   } | null;
-  
+
   // Prediction
   predictionText: string | null;
   pendingPrediction: Prediction | null;
@@ -208,6 +243,7 @@ export interface ApiResponse<T> {
 // Edge Function Request/Response
 export interface InterpretRequest {
   mode: 'self' | 'recipient';
+  goal_challenge: string;              // NEW: What they accomplished
   timeframe: Timeframe;
   intensity: Intensity;
   fires_focus: FIRESElement[];

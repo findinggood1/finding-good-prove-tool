@@ -14,6 +14,7 @@ import type {
 // Initial state
 const initialState: AppState = {
   mode: null,
+  goalChallenge: null,
   timeframe: null,
   intensity: null,
   firesFocus: [],
@@ -31,8 +32,9 @@ const initialState: AppState = {
 interface AppContextType {
   state: AppState;
   // Mode
-  setMode: (mode: 'self' | 'other') => void;
+  setMode: (mode: 'self' | 'other' | 'request') => void;
   // Context setup
+  setGoalChallenge: (goalChallenge: string) => void;
   setTimeframe: (timeframe: Timeframe) => void;
   setIntensity: (intensity: Intensity) => void;
   toggleFiresFocus: (element: FIRESElement) => void;
@@ -63,11 +65,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(initialState);
 
   // Mode
-  const setMode = useCallback((mode: 'self' | 'other') => {
+  const setMode = useCallback((mode: 'self' | 'other' | 'request') => {
     setState(prev => ({ ...prev, mode }));
   }, []);
 
   // Context setup
+  const setGoalChallenge = useCallback((goalChallenge: string) => {
+    setState(prev => ({ ...prev, goalChallenge }));
+  }, []);
+
   const setTimeframe = useCallback((timeframe: Timeframe) => {
     setState(prev => ({ ...prev, timeframe }));
   }, []);
@@ -160,6 +166,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       value={{
         state,
         setMode,
+        setGoalChallenge,
         setTimeframe,
         setIntensity,
         toggleFiresFocus,

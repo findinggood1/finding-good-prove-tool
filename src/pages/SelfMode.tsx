@@ -175,6 +175,7 @@ export default function SelfMode() {
       // Call Edge Function
       const result = await interpretValidation({
         mode: 'self',
+        goal_challenge: state.goalChallenge!,
         timeframe: state.timeframe!,
         intensity: state.intensity!,
         fires_focus: state.firesFocus,
@@ -188,6 +189,7 @@ export default function SelfMode() {
         await saveValidation({
           client_email: email!,
           mode: 'self',
+          goal_challenge: state.goalChallenge!,
           timeframe: state.timeframe!,
           intensity: state.intensity!,
           fires_focus: state.firesFocus,

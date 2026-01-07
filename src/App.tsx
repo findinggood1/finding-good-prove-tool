@@ -9,6 +9,7 @@ import OtherMode from './pages/OtherMode';
 import RequestMode from './pages/RequestMode';
 import RecipientView from './pages/RecipientView';
 import SenderView from './pages/SenderView';
+import ProofRequestView from './pages/ProofRequestView';
 import History from './pages/History';
 
 /**
@@ -38,12 +39,15 @@ function App() {
             {/* Request Mode (Ask for perspective on yourself) */}
             <Route path="/request" element={<RequestMode />} />
             
-            {/* Recipient View (from invitation link) */}
+            {/* Recipient View (from Other mode invitation link) */}
             <Route path="/v/:shareId" element={<RecipientView />} />
-            
-            {/* Sender View (view recipient's response) */}
+
+            {/* Sender View (view Other mode recipient's response) */}
             <Route path="/r/:shareId" element={<SenderView />} />
-            
+
+            {/* Proof Request View (respond to Request mode) */}
+            <Route path="/p/:shareId" element={<ProofRequestView />} />
+
             {/* History */}
             <Route path="/history" element={<History />} />
             

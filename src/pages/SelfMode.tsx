@@ -11,7 +11,6 @@ import {
   Textarea,
   TimeframeSelector,
   IntensitySelector,
-  FIRESElementSelector,
   QuestionCard,
   LoadingSpinner,
   Slider,
@@ -46,7 +45,7 @@ type Step =
 export default function SelfMode() {
   const navigate = useNavigate();
   const { email, isAuthenticated, login, isLoading: authLoading } = useAuth();
-  const { state, setMode, setGoalChallenge, setTimeframe, setIntensity, toggleFiresFocus, setSelectedQuestions, setInterpretation, resetSession } = useApp();
+  const { state, setMode, setGoalChallenge, setTimeframe, setIntensity, setSelectedQuestions, setInterpretation, resetSession } = useApp();
 
   // Local state
   const [step, setStep] = useState<Step>('email');
@@ -124,8 +123,9 @@ export default function SelfMode() {
       return;
     }
 
+    // Pass empty array for firesFocus - AI extracts FIRES elements from responses
     const questions = selectQuestionsForSession(
-      state.firesFocus,
+      [],
       state.intensity
     );
     setSelectedQuestions(questions);
@@ -431,18 +431,6 @@ export default function SelfMode() {
                 <IntensitySelector
                   selected={state.intensity}
                   onChange={(i) => setIntensity(i as Intensity)}
-                />
-              </div>
-
-              {/* FIRES Focus */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  What areas do you want to explore?
-                </label>
-                <FIRESElementSelector
-                  selected={state.firesFocus}
-                  onToggle={(e) => toggleFiresFocus(e as FIRESElement)}
-                  max={3}
                 />
               </div>
             </div>

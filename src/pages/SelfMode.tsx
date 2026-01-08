@@ -14,7 +14,8 @@ import {
   LoadingSpinner,
   Slider,
   Badge,
-  ErrorMessage
+  ErrorMessage,
+  InfoIcon
 } from '../components/ui';
 import { selectQuestionsForSession, getPulseQuestionsForWeek, getCurrentRotationWeek, firesInfo, signalInfo } from '../lib/questions';
 import {
@@ -529,85 +530,73 @@ export default function SelfMode() {
         if (!interpretation) return null;
 
         const signalData = signalInfo[interpretation.validationSignal];
+        const totalScore = interpretation.scores.replication + interpretation.scores.clarity + interpretation.scores.ownership;
 
         return (
           <div className="space-y-6 animate-fade-in">
-            {/* Signal Badge */}
+            {/* Signal Badge - moved to header of first card */}
             <Card variant="elevated" padding="lg">
-              <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-4">
                 <Badge
                   className="text-white px-4 py-2 text-lg"
                   style={{ backgroundColor: signalData.color } as React.CSSProperties}
                 >
                   {signalData.label}
                 </Badge>
-                <p className="mt-4 text-gray-600">{signalData.description}</p>
+              </div>
+              <p className="text-center text-gray-600">{signalData.description}</p>
+            </Card>
+
+            {/* Validation Scores - FIRST */}
+            <Card variant="elevated" padding="lg">
+              <div className="flex items-center gap-2 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Validation Scores</h3>
+                <InfoIcon text="These scores measure how well you can replicate this success. Replication: Can you do this again? Clarity: How specific were you? Ownership: Did you own your actions?" />
+              </div>
+              <div className="grid grid-cols-3 gap-4 text-center mb-4">
+                <div>
+                  <div className="text-3xl font-bold text-fg-primary">{interpretation.scores.replication}/5</div>
+                  <div className="text-sm text-gray-500 mt-1">Replication</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-fg-primary">{interpretation.scores.clarity}/5</div>
+                  <div className="text-sm text-gray-500 mt-1">Clarity</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-fg-primary">{interpretation.scores.ownership}/5</div>
+                  <div className="text-sm text-gray-500 mt-1">Ownership</div>
+                </div>
+              </div>
+              <div className="text-center pt-4 border-t border-gray-200">
+                <div className="text-2xl font-bold text-fg-primary">{totalScore}/15</div>
+                <div className="text-sm text-gray-500">Total Score</div>
               </div>
             </Card>
 
-            {/* Insight */}
-            <Card variant="elevated" padding="lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Your Insight</h3>
-              <p className="text-gray-700 text-lg italic">
-                "{interpretation.validationInsight}"
-              </p>
-            </Card>
-
-            {/* Pattern */}
-            <Card variant="elevated" padding="lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">The Pattern</h3>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">What Worked</h4>
-                  <p className="text-gray-700">{interpretation.pattern.whatWorked}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Why It Worked</h4>
-                  <p className="text-gray-700">{interpretation.pattern.whyItWorked}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">How to Repeat</h4>
-                  <p className="text-gray-700">{interpretation.pattern.howToRepeat}</p>
-                </div>
-              </div>
-            </Card>
-
-            {/* Proof Line */}
-            {interpretation.proofLine && (
-              <Card variant="elevated" padding="lg" className="bg-fg-accent bg-opacity-10 border-2 border-fg-accent">
-                <h3 className="text-sm font-medium text-gray-500 mb-2">Your Proof Line</h3>
-                <p className="text-lg font-semibold text-gray-900">
-                  {interpretation.proofLine}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3"
-                  onClick={() => {
-                    navigator.clipboard.writeText(interpretation.proofLine || '');
-                  }}
-                >
-                  Copy Proof Line
-                </Button>
-              </Card>
-            )}
-
-            {/* FIRES Extracted */}
+            {/* FIRES Elements - SECOND */}
             {interpretation.firesExtracted && (
-              <Card variant="outlined" padding="md">
-                <h3 className="text-sm font-medium text-gray-500 mb-3">FIRES Elements Detected</h3>
-                <div className="space-y-2">
+              <Card variant="elevated" padding="lg">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">FIRES Elements Detected</h3>
+                  <InfoIcon text="FIRES represents the key dimensions of success: Feelings (emotions), Influence (agency), Resilience (handling difficulty), Ethics (values), and Strengths (natural abilities). These were detected in your responses." />
+                </div>
+                <div className="space-y-3">
                   {Object.entries(interpretation.firesExtracted).map(([key, value]) => {
                     if (value.present) {
                       const elementInfo = firesInfo[key as FIRESElement];
                       return (
-                        <div key={key} className="flex items-center gap-2">
+                        <div key={key} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                           <div
-                            className="w-3 h-3 rounded-full"
+                            className="w-4 h-4 rounded-full flex-shrink-0"
                             style={{ backgroundColor: elementInfo.color }}
                           />
-                          <span className="text-sm font-medium text-gray-700">{elementInfo.label}</span>
-                          <span className="text-xs text-gray-500 ml-auto">Strength: {value.strength}/5</span>
+                          <div className="flex-1">
+                            <span className="text-sm font-medium text-gray-900">{elementInfo.label}</span>
+                            <span className="text-xs text-gray-500 ml-2">({elementInfo.description})</span>
+                          </div>
+                          <span className="text-sm font-semibold text-fg-primary">
+                            {value.strength}/5
+                          </span>
                         </div>
                       );
                     }
@@ -617,21 +606,48 @@ export default function SelfMode() {
               </Card>
             )}
 
-            {/* Scores */}
-            <Card variant="outlined" padding="md">
-              <h3 className="text-sm font-medium text-gray-500 mb-3">Validation Scores</h3>
-              <div className="grid grid-cols-3 gap-4 text-center">
+            {/* Insight - THIRD */}
+            <Card variant="elevated" padding="lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Your Insight</h3>
+              <p className="text-gray-700 text-lg italic leading-relaxed">
+                "{interpretation.validationInsight}"
+              </p>
+            </Card>
+
+            {/* Proof Line - FOURTH */}
+            {interpretation.proofLine && (
+              <Card variant="elevated" padding="lg" className="bg-fg-accent bg-opacity-10 border-2 border-fg-accent">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Your Proof Line</h3>
+                <p className="text-lg font-semibold text-gray-900 mb-3">
+                  {interpretation.proofLine}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(interpretation.proofLine || '');
+                  }}
+                >
+                  Copy Proof Line
+                </Button>
+              </Card>
+            )}
+
+            {/* Pattern - FIFTH (LAST) */}
+            <Card variant="elevated" padding="lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">The Pattern</h3>
+              <div className="space-y-4">
                 <div>
-                  <div className="text-2xl font-bold text-fg-primary">{interpretation.scores.replication}</div>
-                  <div className="text-xs text-gray-500">Replication</div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">What Worked</h4>
+                  <p className="text-gray-700">{interpretation.pattern.whatWorked}</p>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-fg-primary">{interpretation.scores.clarity}</div>
-                  <div className="text-xs text-gray-500">Clarity</div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">Why It Worked</h4>
+                  <p className="text-gray-700">{interpretation.pattern.whyItWorked}</p>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-fg-primary">{interpretation.scores.ownership}</div>
-                  <div className="text-xs text-gray-500">Ownership</div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">How to Repeat</h4>
+                  <p className="text-gray-700">{interpretation.pattern.howToRepeat}</p>
                 </div>
               </div>
             </Card>

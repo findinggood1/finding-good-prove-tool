@@ -29,7 +29,7 @@ export default function Landing() {
       <div className="min-h-screen bg-fg-light">
         <Container size="md" className="py-8">
           <Header
-            title="Prove"
+            title="Proof"
             subtitle="Own the actions that created your outcomes"
           />
 
@@ -83,7 +83,7 @@ export default function Landing() {
       <Container size="md" className="py-8">
         {/* Header */}
         <Header
-          title="Prove"
+          title="Proof"
           subtitle="Own the actions that created your outcomes"
         />
 
@@ -206,7 +206,7 @@ export default function Landing() {
           <p>
             If you can't articulate how you got there, you can't repeat it.
             <br />
-            Prove helps you own your process—so you can use it again.
+            Proof helps you own your process—so you can use it again.
           </p>
         </div>
       </Container>

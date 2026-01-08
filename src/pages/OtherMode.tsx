@@ -18,6 +18,7 @@ export default function OtherMode() {
   const [recipientName, setRecipientName] = useState('');
   const [successDescription, setSuccessDescription] = useState('');
   const [shareId, setShareId] = useState('');
+  const [clipboardSuccess, setClipboardSuccess] = useState(false);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,9 +77,16 @@ export default function OtherMode() {
     }
   };
 
-  const copyShareLink = () => {
+  const copyShareLink = async () => {
     const link = `${window.location.origin}/v/${shareId}`;
-    navigator.clipboard.writeText(link);
+    try {
+      await navigator.clipboard.writeText(link);
+      setClipboardSuccess(true);
+      setTimeout(() => setClipboardSuccess(false), 2000);
+    } catch (err) {
+      console.error('[OtherMode] Clipboard copy failed:', err);
+      alert('Failed to copy to clipboard. Please copy manually: ' + link);
+    }
   };
 
   const startAnother = () => {
@@ -255,7 +263,7 @@ export default function OtherMode() {
                   size="sm"
                   onClick={copyShareLink}
                 >
-                  Copy
+                  {clipboardSuccess ? '✓ Copied!' : 'Copy'}
                 </Button>
               </div>
             </div>

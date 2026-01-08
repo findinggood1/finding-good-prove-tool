@@ -15,8 +15,10 @@ export default function History() {
   const [validations, setValidations] = useState<Validation[]>([]);
   const [proofRequests, setProofRequests] = useState<ProofRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
+  const [clipboardSuccess, setClipboardSuccess] = useState<string | null>(null);
 
   // Filter states
   const [showFilters, setShowFilters] = useState(false);
@@ -31,21 +33,31 @@ export default function History() {
         return;
       }
 
-      // Load both validations and proof requests
-      const [validationsResult, requestsResult] = await Promise.all([
-        getValidations(email),
-        getMyProofRequests(email)
-      ]);
+      try {
+        // Load both validations and proof requests
+        const [validationsResult, requestsResult] = await Promise.all([
+          getValidations(email),
+          getMyProofRequests(email)
+        ]);
 
-      if (validationsResult.success && validationsResult.data) {
-        setValidations(validationsResult.data);
+        if (validationsResult.success && validationsResult.data) {
+          setValidations(validationsResult.data);
+        } else if (!validationsResult.success) {
+          console.error('[History] Failed to load validations:', validationsResult.error);
+          setError('Failed to load your proof history');
+        }
+
+        if (requestsResult.success && requestsResult.data) {
+          setProofRequests(requestsResult.data);
+        } else if (!requestsResult.success) {
+          console.error('[History] Failed to load proof requests:', requestsResult.error);
+        }
+      } catch (err) {
+        console.error('[History] Error loading data:', err);
+        setError('Failed to load your data. Please try refreshing the page.');
+      } finally {
+        setLoading(false);
       }
-
-      if (requestsResult.success && requestsResult.data) {
-        setProofRequests(requestsResult.data);
-      }
-
-      setLoading(false);
     }
 
     loadData();
@@ -58,6 +70,17 @@ export default function History() {
       day: 'numeric',
       year: 'numeric'
     });
+  };
+
+  const handleCopyToClipboard = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setClipboardSuccess(id);
+      setTimeout(() => setClipboardSuccess(null), 2000);
+    } catch (err) {
+      console.error('[History] Clipboard copy failed:', err);
+      alert('Failed to copy to clipboard. Please copy manually.');
+    }
   };
 
   const toggleExpand = (id: string) => {
@@ -150,6 +173,25 @@ export default function History() {
     return (
       <div className="min-h-screen bg-fg-light flex items-center justify-center">
         <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-fg-light">
+        <Container size="md" className="py-8">
+          <Header title="Proof Library" />
+          <Card variant="elevated" padding="lg" className="mt-8">
+            <div className="text-center">
+              <div className="text-red-600 text-xl mb-4">⚠️</div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">{error}</h2>
+              <Button variant="primary" onClick={() => window.location.reload()}>
+                Retry
+              </Button>
+            </div>
+          </Card>
+        </Container>
       </div>
     );
   }
@@ -435,7 +477,7 @@ export default function History() {
                       {/* Scores */}
                       <div className="bg-gray-50 rounded-lg p-4">
                         <h4 className="text-sm font-medium text-gray-500 mb-3">Scores</h4>
-                        <div className="grid grid-cols-3 gap-4 text-center">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                           <div>
                             <div className="text-xl font-bold text-fg-primary">{v.scores.replication}</div>
                             <div className="text-xs text-gray-500">Replication</div>
@@ -569,11 +611,9 @@ export default function History() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                navigator.clipboard.writeText(`${window.location.origin}/p/${req.share_id}`);
-                              }}
+                              onClick={() => handleCopyToClipboard(`${window.location.origin}/p/${req.share_id}`, req.share_id)}
                             >
-                              Copy
+                              {clipboardSuccess === req.share_id ? '✓ Copied!' : 'Copy'}
                             </Button>
                           </div>
                         </div>

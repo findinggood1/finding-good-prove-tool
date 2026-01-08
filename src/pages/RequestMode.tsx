@@ -128,9 +128,17 @@ export default function RequestMode() {
   };
 
   // Copy share link
-  const handleCopyLink = () => {
+  const [clipboardSuccess, setClipboardSuccess] = useState(false);
+  const handleCopyLink = async () => {
     const link = `${window.location.origin}/p/${shareId}`;
-    navigator.clipboard.writeText(link);
+    try {
+      await navigator.clipboard.writeText(link);
+      setClipboardSuccess(true);
+      setTimeout(() => setClipboardSuccess(false), 2000);
+    } catch (err) {
+      console.error('[RequestMode] Clipboard copy failed:', err);
+      alert('Failed to copy to clipboard. Please copy manually: ' + link);
+    }
   };
 
   // Render current step
@@ -356,7 +364,7 @@ export default function RequestMode() {
                   {shareLink}
                 </code>
                 <Button variant="outline" size="sm" onClick={handleCopyLink}>
-                  Copy
+                  {clipboardSuccess ? '✓ Copied!' : 'Copy'}
                 </Button>
               </div>
             </div>

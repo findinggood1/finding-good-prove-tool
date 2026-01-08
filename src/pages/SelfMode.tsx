@@ -72,6 +72,21 @@ export default function SelfMode() {
   // Store validation ID for pulse and prediction
   const [validationId, setValidationId] = useState<string | null>(null);
 
+  // Clipboard state
+  const [clipboardSuccess, setClipboardSuccess] = useState(false);
+
+  // Handle clipboard copy with error handling
+  const handleCopyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setClipboardSuccess(true);
+      setTimeout(() => setClipboardSuccess(false), 2000);
+    } catch (err) {
+      console.error('[SelfMode] Clipboard copy failed:', err);
+      alert('Failed to copy to clipboard. Please copy manually.');
+    }
+  };
+
   // Initialize mode
   useEffect(() => {
     setMode('self');
@@ -281,17 +296,28 @@ export default function SelfMode() {
   const handlePulseSubmit = async () => {
     if (!email) return;
 
-    const rotationWeek = getCurrentRotationWeek();
-    await savePulseResponse({
-      client_email: email,
-      validation_id: validationId || null,
-      rotation_week: rotationWeek,
-      clarity_score: pulseScores.clarity,
-      confidence_score: pulseScores.confidence,
-      influence_score: pulseScores.influence
-    });
+    try {
+      const rotationWeek = getCurrentRotationWeek();
+      const result = await savePulseResponse({
+        client_email: email,
+        validation_id: validationId || null,
+        rotation_week: rotationWeek,
+        clarity_score: pulseScores.clarity,
+        confidence_score: pulseScores.confidence,
+        influence_score: pulseScores.influence
+      });
 
-    setStep('prediction');
+      if (!result.success) {
+        console.error('[SelfMode] Failed to save pulse:', result.error);
+        // Continue anyway - pulse is not critical
+      }
+
+      setStep('prediction');
+    } catch (err) {
+      console.error('[SelfMode] Pulse submission error:', err);
+      // Continue anyway - don't block user progress
+      setStep('prediction');
+    }
   };
 
   // Handle prediction submission
@@ -301,29 +327,51 @@ export default function SelfMode() {
       return;
     }
 
-    await savePrediction({
-      client_email: email,
-      validation_id: validationId || null,
-      prediction_text: predictionText,
-      timeframe: state.timeframe!,
-      status: 'pending'
-    });
+    try {
+      const result = await savePrediction({
+        client_email: email,
+        validation_id: validationId || null,
+        prediction_text: predictionText,
+        timeframe: state.timeframe!,
+        status: 'pending'
+      });
 
-    setStep('complete');
+      if (!result.success) {
+        console.error('[SelfMode] Failed to save prediction:', result.error);
+        // Continue anyway - prediction is optional
+      }
+
+      setStep('complete');
+    } catch (err) {
+      console.error('[SelfMode] Prediction submission error:', err);
+      // Continue anyway - don't block completion
+      setStep('complete');
+    }
   };
 
   // Handle prediction review
   const handlePredictionReview = async () => {
     if (!pendingPrediction) return;
 
-    await reviewPrediction(
-      pendingPrediction.id,
-      predictionOutcome,
-      predictionAccuracy
-    );
+    try {
+      const result = await reviewPrediction(
+        pendingPrediction.id,
+        predictionOutcome,
+        predictionAccuracy
+      );
 
-    setPendingPrediction(null);
-    setStep('goal');  // Changed: go to goal step
+      if (!result.success) {
+        console.error('[SelfMode] Failed to review prediction:', result.error);
+        setError('Failed to save prediction review. Please try again.');
+        return;
+      }
+
+      setPendingPrediction(null);
+      setStep('goal');
+    } catch (err) {
+      console.error('[SelfMode] Prediction review error:', err);
+      setError('Failed to save prediction review. Please try again.');
+    }
   };
 
   // Skip prediction review
@@ -553,7 +601,7 @@ export default function SelfMode() {
                 <h3 className="text-lg font-semibold text-gray-900">Validation Scores</h3>
                 <InfoIcon text="These scores measure how well you can replicate this success. Replication: Can you do this again? Clarity: How specific were you? Ownership: Did you own your actions?" />
               </div>
-              <div className="grid grid-cols-3 gap-4 text-center mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center mb-4">
                 <div>
                   <div className="text-3xl font-bold text-fg-primary">{interpretation.scores.replication}/5</div>
                   <div className="text-sm text-gray-500 mt-1">Replication</div>
@@ -624,11 +672,9 @@ export default function SelfMode() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(interpretation.proofLine || '');
-                  }}
+                  onClick={() => handleCopyToClipboard(interpretation.proofLine || '')}
                 >
-                  Copy Proof Line
+                  {clipboardSuccess ? '✓ Copied!' : 'Copy Proof Line'}
                 </Button>
               </Card>
             )}

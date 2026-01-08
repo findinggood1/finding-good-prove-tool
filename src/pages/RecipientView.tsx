@@ -41,9 +41,22 @@ export default function RecipientView() {
 
   // Form state
   const [recipientEmail, setRecipientEmail] = useState('');
+  const [clipboardSuccess, setClipboardSuccess] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>(Array(RECIPIENT_QUESTIONS.length).fill(''));
   const [interpretation, setInterpretation] = useState<ValidationInterpretation | null>(null);
+
+  // Handle clipboard copy
+  const handleCopyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setClipboardSuccess(true);
+      setTimeout(() => setClipboardSuccess(false), 2000);
+    } catch (err) {
+      console.error('[RecipientView] Clipboard copy failed:', err);
+      alert('Failed to copy to clipboard. Please copy manually.');
+    }
+  };
 
   useEffect(() => {
     async function loadInvitation() {
@@ -177,16 +190,26 @@ export default function RecipientView() {
 
     if (saveResult.success && saveResult.data) {
       // Complete the invitation
-      await completeInvitation(
-        shareId!,
-        recipientEmail,
-        saveResult.data.id,
-        {
-          whatSenderSaw: invitation!.what_sender_noticed,
-          whatRecipientRevealed: interpretData.proofLine || interpretData.validationInsight,
-          sharedTruth: interpretData.pattern.whatWorked
+      try {
+        const completeResult = await completeInvitation(
+          shareId!,
+          recipientEmail,
+          saveResult.data.id,
+          {
+            whatSenderSaw: invitation!.what_sender_noticed,
+            whatRecipientRevealed: interpretData.proofLine || interpretData.validationInsight,
+            sharedTruth: interpretData.pattern.whatWorked
+          }
+        );
+
+        if (!completeResult.success) {
+          console.error('[RecipientView] Failed to complete invitation:', completeResult.error);
+          // Don't block user - they can still see results
         }
-      );
+      } catch (err) {
+        console.error('[RecipientView] Error completing invitation:', err);
+        // Don't block user - they can still see results
+      }
     }
 
     setStep('results');
@@ -395,9 +418,9 @@ export default function RecipientView() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigator.clipboard.writeText(interpretation.proofLine!)}
+                  onClick={() => handleCopyToClipboard(interpretation.proofLine!)}
                 >
-                  Copy
+                  {clipboardSuccess ? '✓ Copied!' : 'Copy'}
                 </Button>
               </Card>
             )}

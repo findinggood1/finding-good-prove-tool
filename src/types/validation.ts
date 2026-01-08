@@ -30,7 +30,7 @@ export interface QuestionResponse {
 
 // AI Interpretation Scores
 export interface ValidationScores {
-  replication: number; // 1-5: Could they explain this clearly enough that someone else could try it?
+  confidence: number;  // 1-5: Do you own the HOW? Can you explain the process vs just got lucky?
   clarity: number;     // 1-5: How specific and concrete are their insights?
   ownership: number;   // 1-5: How much do they claim agency in the success?
 }

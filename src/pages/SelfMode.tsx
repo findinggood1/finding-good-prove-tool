@@ -578,7 +578,7 @@ export default function SelfMode() {
         if (!interpretation) return null;
 
         const signalData = signalInfo[interpretation.validationSignal];
-        const totalScore = interpretation.scores.replication + interpretation.scores.clarity + interpretation.scores.ownership;
+        const totalScore = interpretation.scores.confidence + interpretation.scores.clarity + interpretation.scores.ownership;
 
         return (
           <div className="space-y-6 animate-fade-in">
@@ -599,12 +599,12 @@ export default function SelfMode() {
             <Card variant="elevated" padding="lg">
               <div className="flex items-center gap-2 mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Validation Scores</h3>
-                <InfoIcon text="These scores measure how well you can replicate this success. Replication: Can you do this again? Clarity: How specific were you? Ownership: Did you own your actions?" />
+                <InfoIcon text="These scores measure how well you can replicate this success. Confidence: Do you own the HOW? Clarity: How specific were you? Ownership: Did you own your actions?" />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center mb-4">
                 <div>
-                  <div className="text-3xl font-bold text-fg-primary">{interpretation.scores.replication}/5</div>
-                  <div className="text-sm text-gray-500 mt-1">Replication</div>
+                  <div className="text-3xl font-bold text-fg-primary">{interpretation.scores.confidence}/5</div>
+                  <div className="text-sm text-gray-500 mt-1">Confidence</div>
                 </div>
                 <div>
                   <div className="text-3xl font-bold text-fg-primary">{interpretation.scores.clarity}/5</div>

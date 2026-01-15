@@ -321,16 +321,16 @@ export async function getPulseHistory(email: string, limit = 12): Promise<ApiRes
 }
 
 // =============================================================================
-// PREDICTION OPERATIONS
+// OUTCOME PREDICTION OPERATIONS (outcome_predictions table)
 // =============================================================================
 
 /**
- * Save a prediction
+ * Save an outcome prediction
  */
 export async function savePrediction(prediction: Omit<Prediction, 'id' | 'created_at'>): Promise<ApiResponse<Prediction>> {
   try {
     const { data, error } = await supabase
-      .from('predictions')
+      .from('outcome_predictions')
       .insert(prediction)
       .select()
       .single();
@@ -338,18 +338,18 @@ export async function savePrediction(prediction: Omit<Prediction, 'id' | 'create
     if (error) throw error;
     return { success: true, data };
   } catch (error) {
-    console.error('Error saving prediction:', error);
+    console.error('Error saving outcome prediction:', error);
     return { success: false, error: String(error) };
   }
 }
 
 /**
- * Get pending predictions for a user
+ * Get pending outcome predictions for a user
  */
 export async function getPendingPredictions(email: string): Promise<ApiResponse<Prediction[]>> {
   try {
     const { data, error } = await supabase
-      .from('predictions')
+      .from('outcome_predictions')
       .select('*')
       .eq('client_email', email)
       .eq('status', 'pending')
@@ -358,13 +358,13 @@ export async function getPendingPredictions(email: string): Promise<ApiResponse<
     if (error) throw error;
     return { success: true, data: data || [] };
   } catch (error) {
-    console.error('Error getting pending predictions:', error);
+    console.error('Error getting pending outcome predictions:', error);
     return { success: false, error: String(error) };
   }
 }
 
 /**
- * Review/update a prediction with outcome
+ * Review/update an outcome prediction with outcome
  */
 export async function reviewPrediction(
   predictionId: string,
@@ -373,7 +373,7 @@ export async function reviewPrediction(
 ): Promise<ApiResponse<Prediction>> {
   try {
     const { data, error } = await supabase
-      .from('predictions')
+      .from('outcome_predictions')
       .update({
         status: 'reviewed',
         outcome_text: outcomeText,
@@ -387,7 +387,7 @@ export async function reviewPrediction(
     if (error) throw error;
     return { success: true, data };
   } catch (error) {
-    console.error('Error reviewing prediction:', error);
+    console.error('Error reviewing outcome prediction:', error);
     return { success: false, error: String(error) };
   }
 }
